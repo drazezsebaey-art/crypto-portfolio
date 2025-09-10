@@ -78,16 +78,16 @@
                 <p class="text-3xl font-bold text-blue-600" id="totalValue">$0.00</p>
             </div>
             <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الاستثمار</h3>
-                <p class="text-3xl font-bold text-gray-800" id="totalInvestment">$0.00</p>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الاستثمار الابتدائي</h3>
+                <p class="text-3xl font-bold text-gray-800" id="initialInvestment">$0.00</p>
             </div>
             <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الربح/الخسارة</h3>
-                <p class="text-3xl font-bold" id="totalPnL">$0.00</p>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">أداء العملات</h3>
+                <p class="text-3xl font-bold" id="coinPerformance">$0.00</p>
             </div>
             <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">نسبة الربح/الخسارة</h3>
-                <p class="text-3xl font-bold" id="totalPnLPercent">0.00%</p>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">نسبة الأداء العام</h3>
+                <p class="text-3xl font-bold" id="overallPerformancePercent">0.00%</p>
             </div>
         </div>
 
@@ -174,7 +174,8 @@
                 portfolios[defaultId] = {
                     name: 'المحفظة الرئيسية',
                     coins: {},
-                    created: new Date().toISOString()
+                    created: new Date().toISOString(),
+                    initialValue: 0 // إضافة القيمة الابتدائية
                 };
                 currentPortfolio = defaultId;
                 savePortfolios();
@@ -196,7 +197,8 @@
                 portfolios[id] = {
                     name: name.trim(),
                     coins: {},
-                    created: new Date().toISOString()
+                    created: new Date().toISOString(),
+                    initialValue: 0 // إضافة القيمة الابتدائية
                 };
                 currentPortfolio = id;
                 savePortfolios();
@@ -261,12 +263,17 @@
             const amount = parseFloat(document.getElementById('coinAmount').value);
             const buyPrice = parseFloat(document.getElementById('coinPrice').value);
 
-            if (!symbol || !amount || !buyPrice) {
-                alert('يرجى ملء جميع الحقول');
+            if (!symbol || isNaN(amount) || isNaN(buyPrice) || amount <= 0 || buyPrice <= 0) {
+                alert('يرجى ملء جميع الحقول بقيم صالحة');
                 return;
             }
 
             const portfolio = portfolios[currentPortfolio];
+            const investedValue = amount * buyPrice;
+
+            // تحديث القيمة الابتدائية للمحفظة
+            portfolio.initialValue = (portfolio.initialValue || 0) + investedValue;
+
             if (portfolio.coins[symbol]) {
                 // إذا كانت العملة موجودة، نحدث البيانات
                 const existing = portfolio.coins[symbol];
@@ -302,6 +309,9 @@
             if (!currentPortfolio) return;
             
             if (confirm(`هل أنت متأكد من حذف ${symbol}؟`)) {
+                const coin = portfolios[currentPortfolio].coins[symbol];
+                const investedValue = coin.amount * coin.buyPrice;
+                portfolios[currentPortfolio].initialValue = Math.max(0, (portfolios[currentPortfolio].initialValue || 0) - investedValue); // تحديث القيمة الابتدائية
                 delete portfolios[currentPortfolio].coins[symbol];
                 savePortfolios();
                 displayCoins();
@@ -385,31 +395,43 @@
         function updateSummary() {
             if (!currentPortfolio) return;
             
-            const coins = portfolios[currentPortfolio].coins;
-            let totalValue = 0;
-            let totalInvestment = 0;
+            const portfolio = portfolios[currentPortfolio];
+            const coins = portfolio.coins;
+            
+            // التأكد من وجود القيمة الابتدائية
+            if (portfolio.initialValue === undefined) {
+                portfolio.initialValue = 0;
+            }
+            
+            let totalCurrentValue = 0;
+            let totalCoinInvestment = 0;
             
             Object.keys(coins).forEach(symbol => {
                 const coin = coins[symbol];
-                totalValue += coin.amount * coin.currentPrice;
-                totalInvestment += coin.amount * coin.buyPrice;
+                totalCurrentValue += coin.amount * coin.currentPrice;
+                totalCoinInvestment += coin.amount * coin.buyPrice;
             });
             
-            const totalPnL = totalValue - totalInvestment;
-            const totalPnLPercent = totalInvestment > 0 ? (totalPnL / totalInvestment * 100) : 0;
+            // حساب الأداء العام للمحفظة (القيمة الحالية مقابل القيمة الابتدائية)
+            const initialValue = portfolio.initialValue || 0;
+            const coinPerformance = totalCurrentValue - totalCoinInvestment;
+            const overallPerformancePercent = initialValue > 0 ? ((totalCurrentValue - initialValue) / initialValue * 100) : 0;
             
-            document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            document.getElementById('totalInvestment').textContent = `$${totalInvestment.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            // تحديث العناصر
+            document.getElementById('totalValue').textContent = `$${totalCurrentValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('initialInvestment').textContent = `$${initialValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             
-            const pnlElement = document.getElementById('totalPnL');
-            const pnlPercentElement = document.getElementById('totalPnLPercent');
+            const coinPerfElement = document.getElementById('coinPerformance');
+            const overallPerfPercentElement = document.getElementById('overallPerformancePercent');
             
-            pnlElement.textContent = `$${totalPnL.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            pnlPercentElement.textContent = `${totalPnL >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}%`;
+            coinPerfElement.textContent = `$${coinPerformance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            overallPerfPercentElement.textContent = `${overallPerformancePercent >= 0 ? '+' : ''}${overallPerformancePercent.toFixed(2)}%`;
             
-            const pnlClass = totalPnL >= 0 ? 'text-green-600' : 'text-red-600';
-            pnlElement.className = `text-3xl font-bold ${pnlClass}`;
-            pnlPercentElement.className = `text-3xl font-bold ${pnlClass}`;
+            const coinPerfClass = coinPerformance >= 0 ? 'text-green-600' : 'text-red-600';
+            const overallPerfClass = overallPerformancePercent >= 0 ? 'text-green-600' : 'text-red-600';
+            
+            coinPerfElement.className = `text-3xl font-bold ${coinPerfClass}`;
+            overallPerfPercentElement.className = `text-3xl font-bold ${overallPerfClass}`;
         }
 
         // تحديث سعر عملة واحدة
@@ -470,21 +492,16 @@
         // تحويل رمز العملة إلى معرف CoinGecko
         function getCoinId(symbol) {
             const coinMap = {
-                // العملات الأساسية
                 'BTC': 'bitcoin',
                 'ETH': 'ethereum',
                 'USDT': 'tether',
                 'SOL': 'solana',
-                
-                // العملات المطلوبة
                 'SUI': 'sui',
                 'AVAX': 'avalanche-2',
                 'SEI': 'sei-network',
                 'RENDER': 'render-token',
                 'ICP': 'internet-computer',
                 'FET': 'fetch-ai',
-                
-                // العملات الشائعة الأخرى
                 'BNB': 'binancecoin',
                 'XRP': 'ripple',
                 'ADA': 'cardano',

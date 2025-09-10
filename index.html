@@ -69,6 +69,13 @@
                     حذف المحفظة
                 </button>
             </div>
+            <!-- حقل إدخال الاستثمار الابتدائي -->
+            <div class="flex space-x-2 space-x-reverse">
+                <input type="number" id="initialInvestmentInput" placeholder="إجمالي الاستثمار الابتدائي" step="0.01" class="flex-1 p-3 border rounded-lg">
+                <button onclick="updateInitialInvestment()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                    تحديث الاستثمار الابتدائي
+                </button>
+            </div>
         </div>
 
         <!-- ملخص المحفظة -->
@@ -171,20 +178,26 @@
         function createDefaultPortfolio() {
             if (Object.keys(portfolios).length === 0) {
                 const defaultId = 'portfolio_1';
+                const initialValue = parseFloat(prompt('أدخل إجمالي الاستثمار الابتدائي (اختياري، اتركه فارغًا ليبدأ من 0):') || '0');
+                if (isNaN(initialValue) || initialValue < 0) {
+                    alert('القيمة الابتدائية يجب أن تكون رقمًا صالحًا أو صفر');
+                    return createDefaultPortfolio(); // إعادة المحاولة
+                }
                 portfolios[defaultId] = {
                     name: 'المحفظة الرئيسية',
                     coins: {},
                     created: new Date().toISOString(),
-                    initialValue: 0 // إضافة القيمة الابتدائية
+                    initialValue: initialValue
                 };
                 currentPortfolio = defaultId;
                 savePortfolios();
                 updatePortfolioSelect();
                 document.getElementById('portfolioSelect').value = defaultId;
+                document.getElementById('initialInvestmentInput').value = initialValue;
             } else {
-                // اختيار أول محفظة متاحة
                 currentPortfolio = Object.keys(portfolios)[0];
                 document.getElementById('portfolioSelect').value = currentPortfolio;
+                document.getElementById('initialInvestmentInput').value = portfolios[currentPortfolio].initialValue || '';
             }
             displayCoins();
         }
@@ -193,17 +206,23 @@
         function createPortfolio() {
             const name = prompt('اسم المحفظة الجديدة:');
             if (name && name.trim()) {
+                const initialValue = parseFloat(prompt('أدخل إجمالي الاستثمار الابتدائي (اختياري، اتركه فارغًا ليبدأ من 0):') || '0');
+                if (isNaN(initialValue) || initialValue < 0) {
+                    alert('القيمة الابتدائية يجب أن تكون رقمًا صالحًا أو صفر');
+                    return;
+                }
                 const id = 'portfolio_' + Date.now();
                 portfolios[id] = {
                     name: name.trim(),
                     coins: {},
                     created: new Date().toISOString(),
-                    initialValue: 0 // إضافة القيمة الابتدائية
+                    initialValue: initialValue
                 };
                 currentPortfolio = id;
                 savePortfolios();
                 updatePortfolioSelect();
                 document.getElementById('portfolioSelect').value = id;
+                document.getElementById('initialInvestmentInput').value = initialValue;
                 displayCoins();
             }
         }
@@ -223,6 +242,7 @@
                 currentPortfolio = Object.keys(portfolios)[0] || null;
                 savePortfolios();
                 updatePortfolioSelect();
+                document.getElementById('initialInvestmentInput').value = currentPortfolio ? portfolios[currentPortfolio].initialValue || '' : '';
                 if (currentPortfolio) {
                     document.getElementById('portfolioSelect').value = currentPortfolio;
                     displayCoins();
@@ -248,7 +268,10 @@
             const selected = document.getElementById('portfolioSelect').value;
             if (selected && portfolios[selected]) {
                 currentPortfolio = selected;
+                document.getElementById('initialInvestmentInput').value = portfolios[currentPortfolio].initialValue || '';
                 displayCoins();
+            } else {
+                document.getElementById('initialInvestmentInput').value = '';
             }
         }
 
@@ -269,10 +292,6 @@
             }
 
             const portfolio = portfolios[currentPortfolio];
-            const investedValue = amount * buyPrice;
-
-            // تحديث القيمة الابتدائية للمحفظة
-            portfolio.initialValue = (portfolio.initialValue || 0) + investedValue;
 
             if (portfolio.coins[symbol]) {
                 // إذا كانت العملة موجودة، نحدث البيانات
@@ -309,9 +328,6 @@
             if (!currentPortfolio) return;
             
             if (confirm(`هل أنت متأكد من حذف ${symbol}؟`)) {
-                const coin = portfolios[currentPortfolio].coins[symbol];
-                const investedValue = coin.amount * coin.buyPrice;
-                portfolios[currentPortfolio].initialValue = Math.max(0, (portfolios[currentPortfolio].initialValue || 0) - investedValue); // تحديث القيمة الابتدائية
                 delete portfolios[currentPortfolio].coins[symbol];
                 savePortfolios();
                 displayCoins();
@@ -398,11 +414,6 @@
             const portfolio = portfolios[currentPortfolio];
             const coins = portfolio.coins;
             
-            // التأكد من وجود القيمة الابتدائية
-            if (portfolio.initialValue === undefined) {
-                portfolio.initialValue = 0;
-            }
-            
             let totalCurrentValue = 0;
             let totalCoinInvestment = 0;
             
@@ -412,10 +423,11 @@
                 totalCoinInvestment += coin.amount * coin.buyPrice;
             });
             
-            // حساب الأداء العام للمحفظة (القيمة الحالية مقابل القيمة الابتدائية)
+            // حساب الأداء العام بناءً على القيمة الابتدائية الثابتة
             const initialValue = portfolio.initialValue || 0;
             const coinPerformance = totalCurrentValue - totalCoinInvestment;
-            const overallPerformancePercent = initialValue > 0 ? ((totalCurrentValue - initialValue) / initialValue * 100) : 0;
+            const overallPerformance = totalCurrentValue - initialValue;
+            const overallPerformancePercent = initialValue > 0 ? (overallPerformance / initialValue * 100) : 0;
             
             // تحديث العناصر
             document.getElementById('totalValue').textContent = `$${totalCurrentValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
@@ -425,13 +437,32 @@
             const overallPerfPercentElement = document.getElementById('overallPerformancePercent');
             
             coinPerfElement.textContent = `$${coinPerformance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            overallPerfPercentElement.textContent = `${overallPerformancePercent >= 0 ? '+' : ''}${overallPerformancePercent.toFixed(2)}%`;
+            overallPerfPercentElement.textContent = `${overallPerformance >= 0 ? '+' : ''}${overallPerformancePercent.toFixed(2)}%`;
             
             const coinPerfClass = coinPerformance >= 0 ? 'text-green-600' : 'text-red-600';
-            const overallPerfClass = overallPerformancePercent >= 0 ? 'text-green-600' : 'text-red-600';
+            const overallPerfClass = overallPerformance >= 0 ? 'text-green-600' : 'text-red-600';
             
             coinPerfElement.className = `text-3xl font-bold ${coinPerfClass}`;
             overallPerfPercentElement.className = `text-3xl font-bold ${overallPerfClass}`;
+        }
+
+        // تحديث الاستثمار الابتدائي يدويًا
+        function updateInitialInvestment() {
+            if (!currentPortfolio) {
+                alert('يرجى اختيار محفظة أولاً');
+                return;
+            }
+
+            const initialInvestmentInput = parseFloat(document.getElementById('initialInvestmentInput').value);
+            if (isNaN(initialInvestmentInput) || initialInvestmentInput < 0) {
+                alert('يرجى إدخال قيمة صالحة للاستثمار الابتدائي');
+                return;
+            }
+
+            portfolios[currentPortfolio].initialValue = initialInvestmentInput;
+            savePortfolios();
+            displayCoins(); // يعيد عرض الجدول ويحدث الملخص
+            document.getElementById('initialInvestmentInput').value = ''; // مسح الحقل
         }
 
         // تحديث سعر عملة واحدة

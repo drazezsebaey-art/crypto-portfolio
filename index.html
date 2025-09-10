@@ -613,29 +613,27 @@
             const coins = portfolios[currentPortfolio].coins;
             const symbols = Object.keys(coins);
             
-            if (symbols.length === 0) return;
+            if (symbols.length === 0) {
+                document.getElementById('lastUpdate').textContent = 'لا توجد عملات لتحديث الأسعار';
+                return;
+            }
             
             // إظهار حالة التحديث
             document.getElementById('lastUpdate').innerHTML = '<div class="loading-spinner"></div>جاري التحديث...';
             
             try {
-                // جلب أسعار متعددة في طلب واحد (أكثر كفاءة)
-                const binanceSymbols = symbols.map(s => getBinanceSymbol(s)).join(',');
-                const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=[${binanceSymbols}]`);
-                const data = await response.json();
-                
-                if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        const symbol = item.symbol.replace('USDT', ''); // استخراج الرمز الأساسي
-                        if (coins[symbol]) {
-                            coins[symbol].currentPrice = parseFloat(item.price);
-                        }
-                    });
-                } else {
-                    // إذا كان كائن واحد، عامل كحل بديل
-                    symbols.forEach(async (symbol) => {
-                        await updateCoinPrice(symbol);
-                    });
+                // جلب الأسعار بشكل فردي لضمان الدقة
+                for (const symbol of symbols) {
+                    const binanceSymbol = getBinanceSymbol(symbol);
+                    const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+                    const data = await response.json();
+                    
+                    if (data.price) {
+                        coins[symbol].currentPrice = parseFloat(data.price);
+                    } else {
+                        console.warn(`فشل تحديث سعر ${symbol}:`, data);
+                        coins[symbol].currentPrice = 0; // تعيين قيمة افتراضية إذا فشل الطلب
+                    }
                 }
                 
                 savePortfolios();
@@ -646,7 +644,7 @@
                 
             } catch (error) {
                 console.error('خطأ في تحديث الأسعار:', error);
-                document.getElementById('lastUpdate').textContent = 'خطأ في تحديث الأسعار';
+                document.getElementById('lastUpdate').textContent = 'خطأ في تحديث الأسعار، تحقق من الاتصال';
             }
         }
 

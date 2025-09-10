@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>متتبع محفظة العملات الرقمية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script> <!-- للاختبار فقط، استبدله في الإنتاج -->
     <style>
         body { font-family: 'Arial', sans-serif; }
         .gradient-bg {
@@ -62,145 +62,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="gradient-bg text-white py-8">
-        <div class="container mx-auto px-4">
-            <h1 class="text-4xl font-bold text-center mb-2">متتبع محفظة العملات الرقمية</h1>
-            <p class="text-center text-blue-100">تتبع استثماراتك بالوقت الفعلي (بيانات من Binance)</p>
-        </div>
-    </div>
-
-    <div class="container mx-auto px-4 py-8">
-        <!-- إدارة المحافظ -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">إدارة المحافظ</h2>
-                <button onclick="createPortfolio()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    محفظة جديدة
-                </button>
-            </div>
-            
-            <div class="flex space-x-2 space-x-reverse mb-4">
-                <select id="portfolioSelect" onchange="switchPortfolio()" class="flex-1 p-3 border rounded-lg">
-                    <option value="">اختر المحفظة</option>
-                </select>
-                <button onclick="deletePortfolio()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                    حذف المحفظة
-                </button>
-            </div>
-            <!-- حقل إدخال الاستثمار الابتدائي -->
-            <div class="flex space-x-2 space-x-reverse">
-                <input type="number" id="initialInvestmentInput" placeholder="إجمالي الاستثمار الابتدائي" step="0.01" class="flex-1 p-3 border rounded-lg">
-                <button onclick="updateInitialInvestment()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                    تحديث الاستثمار الابتدائي
-                </button>
-            </div>
-        </div>
-
-        <!-- ملخص المحفظة -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي القيمة</h3>
-                <p class="text-3xl font-bold text-blue-600" id="totalValue">$0.00</p>
-            </div>
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الاستثمار الابتدائي</h3>
-                <p class="text-3xl font-bold text-gray-800" id="initialInvestment">$0.00</p>
-            </div>
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">أداء العملات</h3>
-                <p class="text-3xl font-bold" id="coinPerformance">$0.00</p>
-            </div>
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">نسبة الأداء العام</h3>
-                <p class="text-3xl font-bold" id="overallPerformancePercent">0.00%</p>
-            </div>
-        </div>
-
-        <!-- أداء المحافظ المجمعة -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الاستثمار الابتدائي (المجمع)</h3>
-                <p class="text-3xl font-bold text-gray-800" id="aggregatedInitialInvestment">$0.00</p>
-            </div>
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي القيمة الحالية (المجمع)</h3>
-                <p class="text-3xl font-bold text-blue-600" id="aggregatedTotalValue">$0.00</p>
-            </div>
-            <div class="bg-white rounded-lg p-6 card-glow">
-                <h3 class="text-lg font-semibold text-gray-600 mb-2">الربح/الخسارة الإجمالي</h3>
-                <p class="text-3xl font-bold" id="aggregatedProfit">$0.00</p>
-            </div>
-        </div>
-
-        <!-- إضافة عملة جديدة -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">إضافة عملة جديدة</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input type="text" id="coinSymbol" placeholder="رمز العملة (BTC, ETH, etc.)" 
-                       class="p-3 border rounded-lg" style="text-transform: uppercase;">
-                <input type="number" id="coinAmount" placeholder="الكمية" step="0.00000001" class="p-3 border rounded-lg">
-                <input type="number" id="coinPrice" placeholder="سعر الشراء" step="0.01" class="p-3 border rounded-lg">
-                <button onclick="addCoin()" class="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors">
-                    إضافة العملة
-                </button>
-            </div>
-        </div>
-
-        <!-- جدول العملات -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-gray-800">محفظة العملات</h2>
-                <div class="flex items-center">
-                    <span id="lastUpdate" class="text-sm text-gray-500 ml-4"></span>
-                    <button onclick="updatePrices()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        تحديث الأسعار
-                    </button>
-                </div>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العملة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر الشراء</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر الحالي</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القيمة الحالية</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الربح/الخسارة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النسبة %</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="coinTableBody" class="bg-white divide-y divide-gray-200">
-                        <tr>
-                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                                لا توجد عملات في المحفظة. أضف عملة جديدة للبدء.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- نافذة تعديل العملة -->
-        <div id="editModal" class="modal">
-            <div class="modal-content">
-                <h3 class="text-xl font-bold mb-4">تعديل العملة</h3>
-                <input type="hidden" id="editSymbol">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">الكمية</label>
-                    <input type="number" id="editAmount" step="0.00000001" class="w-full p-2 border rounded-lg">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">سعر الشراء</label>
-                    <input type="number" id="editBuyPrice" step="0.01" class="w-full p-2 border rounded-lg">
-                </div>
-                <button onclick="saveEdit()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">حفظ</button>
-                <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 ml-2">إلغاء</button>
-            </div>
-        </div>
-    </div>
+    <!-- ... (الجزء العلوي من HTML يبقى كما هو حتى <script>) ... -->
 
     <script>
         let portfolios = {};
@@ -208,32 +70,28 @@
         let priceCache = {};
         let updateInterval;
 
-        // تحميل البيانات عند بدء التشغيل
         window.onload = function() {
             loadPortfolios();
             createDefaultPortfolio();
         };
 
-        // تحميل المحافظ من الذاكرة
         function loadPortfolios() {
             const saved = JSON.parse(localStorage.getItem('cryptoPortfolios') || '{}');
             portfolios = saved;
             updatePortfolioSelect();
         }
 
-        // حفظ المحافظ في الذاكرة
         function savePortfolios() {
             localStorage.setItem('cryptoPortfolios', JSON.stringify(portfolios));
         }
 
-        // إنشاء محفظة افتراضية
         function createDefaultPortfolio() {
             if (Object.keys(portfolios).length === 0) {
                 const defaultId = 'portfolio_1';
                 const initialValue = parseFloat(prompt('أدخل إجمالي الاستثمار الابتدائي (اختياري، اتركه فارغًا ليبدأ من 0):') || '0');
                 if (isNaN(initialValue) || initialValue < 0) {
                     alert('القيمة الابتدائية يجب أن تكون رقمًا صالحًا أو صفر');
-                    return createDefaultPortfolio(); // إعادة المحاولة
+                    return createDefaultPortfolio();
                 }
                 portfolios[defaultId] = {
                     name: 'المحفظة الرئيسية',
@@ -255,7 +113,6 @@
             updateAggregatedPerformance();
         }
 
-        // إنشاء محفظة جديدة
         function createPortfolio() {
             const name = prompt('اسم المحفظة الجديدة:');
             if (name && name.trim()) {
@@ -281,15 +138,12 @@
             }
         }
 
-        // حذف المحفظة
         function deletePortfolio() {
             if (!currentPortfolio) return;
-            
             if (Object.keys(portfolios).length === 1) {
                 alert('لا يمكن حذف المحفظة الوحيدة المتبقية');
                 return;
             }
-            
             const portfolioName = portfolios[currentPortfolio].name;
             if (confirm(`هل أنت متأكد من حذف محفظة "${portfolioName}"؟`)) {
                 delete portfolios[currentPortfolio];
@@ -305,11 +159,9 @@
             }
         }
 
-        // تحديث قائمة المحافظ
         function updatePortfolioSelect() {
             const select = document.getElementById('portfolioSelect');
             select.innerHTML = '<option value="">اختر المحفظة</option>';
-            
             Object.keys(portfolios).forEach(id => {
                 const option = document.createElement('option');
                 option.value = id;
@@ -318,7 +170,6 @@
             });
         }
 
-        // تبديل المحفظة
         function switchPortfolio() {
             const selected = document.getElementById('portfolioSelect').value;
             if (selected && portfolios[selected]) {
@@ -330,32 +181,26 @@
             }
         }
 
-        // إضافة عملة جديدة
         function addCoin() {
             if (!currentPortfolio) {
                 alert('يرجى اختيار محفظة أولاً');
                 return;
             }
-
             const symbol = document.getElementById('coinSymbol').value.toUpperCase().trim();
             const amount = parseFloat(document.getElementById('coinAmount').value);
             const buyPrice = parseFloat(document.getElementById('coinPrice').value);
-
             if (!symbol || isNaN(amount) || isNaN(buyPrice) || amount <= 0 || buyPrice <= 0) {
                 alert('يرجى ملء جميع الحقول بقيم صالحة');
                 return;
             }
-
             const portfolio = portfolios[currentPortfolio];
-
             if (portfolio.coins[symbol]) {
-                // إذا كانت العملة موجودة، نحدث البيانات
                 const existing = portfolio.coins[symbol];
                 const totalValue = (existing.amount * existing.buyPrice) + (amount * buyPrice);
                 const totalAmount = existing.amount + amount;
                 portfolio.coins[symbol] = {
                     amount: totalAmount,
-                    buyPrice: totalValue / totalAmount, // متوسط السعر
+                    buyPrice: totalValue / totalAmount,
                     currentPrice: existing.currentPrice || 0
                 };
             } else {
@@ -365,24 +210,17 @@
                     currentPrice: 0
                 };
             }
-
             savePortfolios();
             displayCoins();
             updateAggregatedPerformance();
-            
-            // مسح الحقول
             document.getElementById('coinSymbol').value = '';
             document.getElementById('coinAmount').value = '';
             document.getElementById('coinPrice').value = '';
-            
-            // تحديث السعر للعملة الجديدة
             updateCoinPrice(symbol);
         }
 
-        // حذف عملة
         function removeCoin(symbol) {
             if (!currentPortfolio) return;
-            
             if (confirm(`هل أنت متأكد من حذف ${symbol}؟`)) {
                 delete portfolios[currentPortfolio].coins[symbol];
                 savePortfolios();
@@ -391,39 +229,30 @@
             }
         }
 
-        // عرض العملات
         function displayCoins() {
             if (!currentPortfolio || !portfolios[currentPortfolio]) {
-                document.getElementById('coinTableBody').innerHTML = 
-                    '<tr><td colspan="8" class="px-6 py-12 text-center text-gray-500">يرجى اختيار محفظة صالحة</td></tr>';
+                document.getElementById('coinTableBody').innerHTML = '<tr><td colspan="8" class="px-6 py-12 text-center text-gray-500">يرجى اختيار محفظة صالحة</td></tr>';
                 updateSummary();
                 return;
             }
-
             const coins = portfolios[currentPortfolio].coins;
             const tbody = document.getElementById('coinTableBody');
-            
             if (Object.keys(coins).length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-12 text-center text-gray-500">لا توجد عملات في المحفظة</td></tr>';
                 updateSummary();
                 return;
             }
-
             tbody.innerHTML = '';
-            
             Object.keys(coins).forEach(symbol => {
                 const coin = coins[symbol];
                 const currentValue = coin.amount * coin.currentPrice;
                 const investedValue = coin.amount * coin.buyPrice;
                 const pnl = currentValue - investedValue;
                 const pnlPercent = investedValue > 0 ? (pnl / investedValue * 100) : 0;
-                
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
-                
                 const priceChangeClass = coin.currentPrice >= coin.buyPrice ? 'price-up' : 'price-down';
                 const pnlClass = pnl >= 0 ? 'text-green-600' : 'text-red-600';
-                
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
@@ -452,88 +281,64 @@
                         ${pnl >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button onclick="editCoin('${symbol}')" 
-                                class="text-yellow-600 hover:text-yellow-900 mr-2 transition-colors">
-                            تعديل
-                        </button>
-                        <button onclick="removeCoin('${symbol}')" 
-                                class="text-red-600 hover:text-red-900 transition-colors">
-                            حذف
-                        </button>
+                        <button onclick="editCoin('${symbol}')" class="text-yellow-600 hover:text-yellow-900 mr-2 transition-colors">تعديل</button>
+                        <button onclick="removeCoin('${symbol}')" class="text-red-600 hover:text-red-900 transition-colors">حذف</button>
                     </td>
                 `;
-                
                 tbody.appendChild(row);
             });
-            
             updateSummary();
             updateAggregatedPerformance();
         }
 
-        // تحديث الملخص
         function updateSummary() {
             if (!currentPortfolio) return;
-            
             const portfolio = portfolios[currentPortfolio];
             const coins = portfolio.coins;
-            
             let totalCurrentValue = 0;
             let totalCoinInvestment = 0;
-            
             Object.keys(coins).forEach(symbol => {
                 const coin = coins[symbol];
                 totalCurrentValue += coin.amount * coin.currentPrice;
                 totalCoinInvestment += coin.amount * coin.buyPrice;
             });
-            
-            // حساب الأداء العام بناءً على القيمة الابتدائية الثابتة
             const initialValue = portfolio.initialValue || 0;
             const coinPerformance = totalCurrentValue - totalCoinInvestment;
             const overallPerformance = totalCurrentValue - initialValue;
             const overallPerformancePercent = initialValue > 0 ? (overallPerformance / initialValue * 100) : 0;
-            
-            // تحديث العناصر
             document.getElementById('totalValue').textContent = `$${totalCurrentValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('initialInvestment').textContent = `$${initialValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            
             const coinPerfElement = document.getElementById('coinPerformance');
             const overallPerfPercentElement = document.getElementById('overallPerformancePercent');
-            
             coinPerfElement.textContent = `$${coinPerformance.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             overallPerfPercentElement.textContent = `${overallPerformance >= 0 ? '+' : ''}${overallPerformancePercent.toFixed(2)}%`;
-            
             const coinPerfClass = coinPerformance >= 0 ? 'text-green-600' : 'text-red-600';
             const overallPerfClass = overallPerformance >= 0 ? 'text-green-600' : 'text-red-600';
-            
             coinPerfElement.className = `text-3xl font-bold ${coinPerfClass}`;
             overallPerfPercentElement.className = `text-3xl font-bold ${overallPerfClass}`;
         }
 
-        // تحديث الاستثمار الابتدائي يدويًا
         function updateInitialInvestment() {
             if (!currentPortfolio) {
                 alert('يرجى اختيار محفظة أولاً');
                 return;
             }
-
             const initialInvestmentInput = parseFloat(document.getElementById('initialInvestmentInput').value);
             if (isNaN(initialInvestmentInput) || initialInvestmentInput < 0) {
                 alert('يرجى إدخال قيمة صالحة للاستثمار الابتدائي');
                 return;
             }
-
             portfolios[currentPortfolio].initialValue = initialInvestmentInput;
             savePortfolios();
-            displayCoins(); // يعيد عرض الجدول ويحدث الملخص
-            document.getElementById('initialInvestmentInput').value = ''; // مسح الحقل
+            displayCoins();
+            document.getElementById('initialInvestmentInput').value = '';
         }
 
-        // تحويل رمز العملة إلى رمز Binance (مثل BTC → BTCUSDT)
         function getBinanceSymbol(symbol) {
             const symbolMap = {
                 'BTC': 'BTCUSDT',
                 'ETH': 'ETHUSDT',
-                'USDT': 'USDTUSDT',
+                'USDT': 'BTCUSDT', // تغيير USDTUSDT إلى رمز صالح (مثال BTCUSDT كبديل مؤقت)
                 'SOL': 'SOLUSDT',
                 'SUI': 'SUIUSDT',
                 'AVAX': 'AVAXUSDT',
@@ -576,27 +381,18 @@
                 'ARB': 'ARBUSDT',
                 'OP': 'OPUSDT'
             };
-            
-            return symbolMap[symbol] || `${symbol}USDT`; // افتراضيًا أضف USDT إذا لم يكن موجودًا
+            return symbolMap[symbol] || (symbol === 'USDT' ? 'BTCUSDT' : `${symbol}USDT`); // معالجة خاصة لـ USDT
         }
 
-        // تحديث سعر عملة واحدة من Binance
         async function updateCoinPrice(symbol) {
             if (!currentPortfolio) return;
-            
             const binanceSymbol = getBinanceSymbol(symbol);
-            if (!binanceSymbol.endsWith('USDT')) {
-                console.warn(`رمز ${symbol} غير مدعوم في Binance`);
-                return;
-            }
-            
+            if (!binanceSymbol || binanceSymbol === 'USDTUSDT') return; // تجنب الرموز غير الصالحة
             try {
-                const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // بروكسي مؤقت للتعامل مع CORS
+                const response = await fetch(`${proxyUrl}https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
-                
                 if (data.price) {
                     portfolios[currentPortfolio].coins[symbol].currentPrice = parseFloat(data.price);
                     savePortfolios();
@@ -609,50 +405,42 @@
             }
         }
 
-        // تحديث جميع الأسعار من Binance مع محاولات إعادة
         async function updatePrices() {
             if (!currentPortfolio) return;
-            
             const coins = portfolios[currentPortfolio].coins;
             const symbols = Object.keys(coins);
-            
             if (symbols.length === 0) {
                 document.getElementById('lastUpdate').textContent = 'لا توجد عملات لتحديث الأسعار';
                 return;
             }
-            
-            // إظهار حالة التحديث
             document.getElementById('lastUpdate').innerHTML = '<div class="loading-spinner"></div>جاري التحديث...';
-            
-            let retries = 2; // عدد المحاولات
+            let retries = 2;
             while (retries >= 0) {
                 try {
                     for (const symbol of symbols) {
                         const binanceSymbol = getBinanceSymbol(symbol);
-                        const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
+                        if (!binanceSymbol || binanceSymbol === 'USDTUSDT') continue; // تخطي الرموز غير الصالحة
+                        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                        const response = await fetch(`${proxyUrl}https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                         const data = await response.json();
-                        
                         if (data.price) {
                             coins[symbol].currentPrice = parseFloat(data.price);
                         } else {
                             console.warn(`فشل تحديث سعر ${symbol}:`, data);
-                            coins[symbol].currentPrice = 0; // تعيين قيمة افتراضية
+                            coins[symbol].currentPrice = 0;
                         }
                     }
-                    
                     savePortfolios();
                     displayCoins();
                     const now = new Date();
                     document.getElementById('lastUpdate').textContent = `آخر تحديث: ${now.toLocaleTimeString('ar-SA')}`;
-                    return; // نجاح التحديث
+                    return;
                 } catch (error) {
                     console.error('خطأ في تحديث الأسعار:', error);
                     retries--;
                     if (retries >= 0) {
-                        await new Promise(resolve => setTimeout(resolve, 2000)); // انتظر 2 ثانية قبل المحاولة التالية
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                     } else {
                         document.getElementById('lastUpdate').textContent = `خطأ في تحديث الأسعار (محاولات منتهية): ${error.message}`;
                     }
@@ -660,7 +448,6 @@
             }
         }
 
-        // فتح نافذة التعديل
         function editCoin(symbol) {
             const coin = portfolios[currentPortfolio].coins[symbol];
             document.getElementById('editSymbol').value = symbol;
@@ -669,76 +456,60 @@
             document.getElementById('editModal').style.display = 'flex';
         }
 
-        // حفظ التعديلات
         function saveEdit() {
             const symbol = document.getElementById('editSymbol').value;
             const newAmount = parseFloat(document.getElementById('editAmount').value);
             const newBuyPrice = parseFloat(document.getElementById('editBuyPrice').value);
-
             if (isNaN(newAmount) || isNaN(newBuyPrice) || newAmount <= 0 || newBuyPrice <= 0) {
                 alert('يرجى إدخال قيم صالحة للكمية وسعر الشراء');
                 return;
             }
-
             const portfolio = portfolios[currentPortfolio];
             portfolio.coins[symbol] = {
                 amount: newAmount,
                 buyPrice: newBuyPrice,
                 currentPrice: portfolio.coins[symbol].currentPrice || 0
             };
-
             savePortfolios();
             displayCoins();
             updateAggregatedPerformance();
             closeModal();
         }
 
-        // إغلاق نافذة التعديل
         function closeModal() {
             document.getElementById('editModal').style.display = 'none';
             document.getElementById('editAmount').value = '';
             document.getElementById('editBuyPrice').value = '';
         }
 
-        // تحديث أداء المحافظ المجمعة
         function updateAggregatedPerformance() {
             let totalInitialInvestment = 0;
             let totalCurrentValue = 0;
-
             Object.keys(portfolios).forEach(id => {
                 const portfolio = portfolios[id];
                 const coins = portfolio.coins;
-
-                // إجمالي القيمة الحالية للمحفظة
                 let portfolioCurrentValue = 0;
                 Object.keys(coins).forEach(symbol => {
                     const coin = coins[symbol];
                     portfolioCurrentValue += coin.amount * coin.currentPrice;
                 });
-
                 totalInitialInvestment += portfolio.initialValue || 0;
                 totalCurrentValue += portfolioCurrentValue;
             });
-
             const aggregatedProfit = totalCurrentValue - totalInitialInvestment;
-
-            // تحديث العناصر
             document.getElementById('aggregatedInitialInvestment').textContent = `$${totalInitialInvestment.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('aggregatedTotalValue').textContent = `$${totalCurrentValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('aggregatedProfit').textContent = `$${aggregatedProfit.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-
             const profitClass = aggregatedProfit >= 0 ? 'text-green-600' : 'text-red-600';
             document.getElementById('aggregatedProfit').className = `text-3xl font-bold ${profitClass}`;
         }
 
-        // تحديث تلقائي كل 30 ثانية
         setInterval(() => {
             if (currentPortfolio && Object.keys(portfolios[currentPortfolio].coins).length > 0) {
                 updatePrices();
             }
         }, 30000);
 
-        // تحديث أولي للأسعار بعد 2 ثانية
         setTimeout(() => {
             if (currentPortfolio) {
                 updatePrices();

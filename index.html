@@ -62,7 +62,145 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- ... (الجزء العلوي من HTML يبقى كما هو حتى <script>) ... -->
+    <div class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold text-center mb-2">متتبع محفظة العملات الرقمية</h1>
+            <p class="text-center text-blue-100">تتبع استثماراتك بالوقت الفعلي (بيانات من Binance)</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- إدارة المحافظ -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">إدارة المحافظ</h2>
+                <button onclick="createPortfolio()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    محفظة جديدة
+                </button>
+            </div>
+            
+            <div class="flex space-x-2 space-x-reverse mb-4">
+                <select id="portfolioSelect" onchange="switchPortfolio()" class="flex-1 p-3 border rounded-lg">
+                    <option value="">اختر المحفظة</option>
+                </select>
+                <button onclick="deletePortfolio()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    حذف المحفظة
+                </button>
+            </div>
+            <!-- حقل إدخال الاستثمار الابتدائي -->
+            <div class="flex space-x-2 space-x-reverse">
+                <input type="number" id="initialInvestmentInput" placeholder="إجمالي الاستثمار الابتدائي" step="0.01" class="flex-1 p-3 border rounded-lg">
+                <button onclick="updateInitialInvestment()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                    تحديث الاستثمار الابتدائي
+                </button>
+            </div>
+        </div>
+
+        <!-- ملخص المحفظة -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي القيمة</h3>
+                <p class="text-3xl font-bold text-blue-600" id="totalValue">$0.00</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الاستثمار الابتدائي</h3>
+                <p class="text-3xl font-bold text-gray-800" id="initialInvestment">$0.00</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">أداء العملات</h3>
+                <p class="text-3xl font-bold" id="coinPerformance">$0.00</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">نسبة الأداء العام</h3>
+                <p class="text-3xl font-bold" id="overallPerformancePercent">0.00%</p>
+            </div>
+        </div>
+
+        <!-- أداء المحافظ المجمعة -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي الاستثمار الابتدائي (المجمع)</h3>
+                <p class="text-3xl font-bold text-gray-800" id="aggregatedInitialInvestment">$0.00</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">إجمالي القيمة الحالية (المجمع)</h3>
+                <p class="text-3xl font-bold text-blue-600" id="aggregatedTotalValue">$0.00</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 card-glow">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">الربح/الخسارة الإجمالي</h3>
+                <p class="text-3xl font-bold" id="aggregatedProfit">$0.00</p>
+            </div>
+        </div>
+
+        <!-- إضافة عملة جديدة -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">إضافة عملة جديدة</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="coinSymbol" placeholder="رمز العملة (BTC, ETH, etc.)" 
+                       class="p-3 border rounded-lg" style="text-transform: uppercase;">
+                <input type="number" id="coinAmount" placeholder="الكمية" step="0.00000001" class="p-3 border rounded-lg">
+                <input type="number" id="coinPrice" placeholder="سعر الشراء" step="0.01" class="p-3 border rounded-lg">
+                <button onclick="addCoin()" class="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors">
+                    إضافة العملة
+                </button>
+            </div>
+        </div>
+
+        <!-- جدول العملات -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">محفظة العملات</h2>
+                <div class="flex items-center">
+                    <span id="lastUpdate" class="text-sm text-gray-500 ml-4"></span>
+                    <button onclick="updatePrices()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        تحديث الأسعار
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العملة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكمية</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سعر الشراء</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر الحالي</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القيمة الحالية</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الربح/الخسارة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النسبة %</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coinTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                لا توجد عملات في المحفظة. أضف عملة جديدة للبدء.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- نافذة تعديل العملة -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <h3 class="text-xl font-bold mb-4">تعديل العملة</h3>
+                <input type="hidden" id="editSymbol">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">الكمية</label>
+                    <input type="number" id="editAmount" step="0.00000001" class="w-full p-2 border rounded-lg">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">سعر الشراء</label>
+                    <input type="number" id="editBuyPrice" step="0.01" class="w-full p-2 border rounded-lg">
+                </div>
+                <button onclick="saveEdit()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">حفظ</button>
+                <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 ml-2">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         let portfolios = {};
@@ -70,9 +208,14 @@
         let priceCache = {};
         let updateInterval;
 
+        // تأكد من تحميل الصفحة قبل تنفيذ الدوال
         window.onload = function() {
-            loadPortfolios();
-            createDefaultPortfolio();
+            if (document.getElementById('portfolioSelect')) {
+                loadPortfolios();
+                createDefaultPortfolio();
+            } else {
+                console.error('العنصر portfolioSelect غير موجود في الصفحة');
+            }
         };
 
         function loadPortfolios() {
@@ -102,11 +245,15 @@
                 currentPortfolio = defaultId;
                 savePortfolios();
                 updatePortfolioSelect();
-                document.getElementById('portfolioSelect').value = defaultId;
+                if (document.getElementById('portfolioSelect')) {
+                    document.getElementById('portfolioSelect').value = defaultId;
+                }
                 document.getElementById('initialInvestmentInput').value = initialValue;
             } else {
                 currentPortfolio = Object.keys(portfolios)[0];
-                document.getElementById('portfolioSelect').value = currentPortfolio;
+                if (document.getElementById('portfolioSelect')) {
+                    document.getElementById('portfolioSelect').value = currentPortfolio;
+                }
                 document.getElementById('initialInvestmentInput').value = portfolios[currentPortfolio].initialValue || '';
             }
             displayCoins();
@@ -131,7 +278,9 @@
                 currentPortfolio = id;
                 savePortfolios();
                 updatePortfolioSelect();
-                document.getElementById('portfolioSelect').value = id;
+                if (document.getElementById('portfolioSelect')) {
+                    document.getElementById('portfolioSelect').value = id;
+                }
                 document.getElementById('initialInvestmentInput').value = initialValue;
                 displayCoins();
                 updateAggregatedPerformance();
@@ -151,7 +300,7 @@
                 savePortfolios();
                 updatePortfolioSelect();
                 document.getElementById('initialInvestmentInput').value = currentPortfolio ? portfolios[currentPortfolio].initialValue || '' : '';
-                if (currentPortfolio) {
+                if (currentPortfolio && document.getElementById('portfolioSelect')) {
                     document.getElementById('portfolioSelect').value = currentPortfolio;
                     displayCoins();
                 }
@@ -161,6 +310,10 @@
 
         function updatePortfolioSelect() {
             const select = document.getElementById('portfolioSelect');
+            if (!select) {
+                console.error('العنصر portfolioSelect غير موجود');
+                return;
+            }
             select.innerHTML = '<option value="">اختر المحفظة</option>';
             Object.keys(portfolios).forEach(id => {
                 const option = document.createElement('option');
@@ -381,15 +534,15 @@
                 'ARB': 'ARBUSDT',
                 'OP': 'OPUSDT'
             };
-            return symbolMap[symbol] || (symbol === 'USDT' ? 'BTCUSDT' : `${symbol}USDT`); // معالجة خاصة لـ USDT
+            return symbolMap[symbol] || (symbol === 'USDT' ? 'BTCUSDT' : `${symbol}USDT`);
         }
 
         async function updateCoinPrice(symbol) {
             if (!currentPortfolio) return;
             const binanceSymbol = getBinanceSymbol(symbol);
-            if (!binanceSymbol || binanceSymbol === 'USDTUSDT') return; // تجنب الرموز غير الصالحة
+            if (!binanceSymbol || binanceSymbol === 'USDTUSDT') return;
             try {
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // بروكسي مؤقت للتعامل مع CORS
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
                 const response = await fetch(`${proxyUrl}https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
@@ -419,7 +572,7 @@
                 try {
                     for (const symbol of symbols) {
                         const binanceSymbol = getBinanceSymbol(symbol);
-                        if (!binanceSymbol || binanceSymbol === 'USDTUSDT') continue; // تخطي الرموز غير الصالحة
+                        if (!binanceSymbol || binanceSymbol === 'USDTUSDT') continue;
                         const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
                         const response = await fetch(`${proxyUrl}https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
                         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);

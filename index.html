@@ -592,6 +592,9 @@
             
             try {
                 const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
                 const data = await response.json();
                 
                 if (data.price) {
@@ -606,7 +609,7 @@
             }
         }
 
-        // تحديث جميع الأسعار من Binance
+        // تحديث جميع الأسعار من Binance مع محاولات إعادة
         async function updatePrices() {
             if (!currentPortfolio) return;
             
@@ -621,30 +624,39 @@
             // إظهار حالة التحديث
             document.getElementById('lastUpdate').innerHTML = '<div class="loading-spinner"></div>جاري التحديث...';
             
-            try {
-                // جلب الأسعار بشكل فردي لضمان الدقة
-                for (const symbol of symbols) {
-                    const binanceSymbol = getBinanceSymbol(symbol);
-                    const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
-                    const data = await response.json();
+            let retries = 2; // عدد المحاولات
+            while (retries >= 0) {
+                try {
+                    for (const symbol of symbols) {
+                        const binanceSymbol = getBinanceSymbol(symbol);
+                        const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${binanceSymbol}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        
+                        if (data.price) {
+                            coins[symbol].currentPrice = parseFloat(data.price);
+                        } else {
+                            console.warn(`فشل تحديث سعر ${symbol}:`, data);
+                            coins[symbol].currentPrice = 0; // تعيين قيمة افتراضية
+                        }
+                    }
                     
-                    if (data.price) {
-                        coins[symbol].currentPrice = parseFloat(data.price);
+                    savePortfolios();
+                    displayCoins();
+                    const now = new Date();
+                    document.getElementById('lastUpdate').textContent = `آخر تحديث: ${now.toLocaleTimeString('ar-SA')}`;
+                    return; // نجاح التحديث
+                } catch (error) {
+                    console.error('خطأ في تحديث الأسعار:', error);
+                    retries--;
+                    if (retries >= 0) {
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // انتظر 2 ثانية قبل المحاولة التالية
                     } else {
-                        console.warn(`فشل تحديث سعر ${symbol}:`, data);
-                        coins[symbol].currentPrice = 0; // تعيين قيمة افتراضية إذا فشل الطلب
+                        document.getElementById('lastUpdate').textContent = `خطأ في تحديث الأسعار (محاولات منتهية): ${error.message}`;
                     }
                 }
-                
-                savePortfolios();
-                displayCoins();
-                
-                const now = new Date();
-                document.getElementById('lastUpdate').textContent = `آخر تحديث: ${now.toLocaleTimeString('ar-SA')}`;
-                
-            } catch (error) {
-                console.error('خطأ في تحديث الأسعار:', error);
-                document.getElementById('lastUpdate').textContent = 'خطأ في تحديث الأسعار، تحقق من الاتصال';
             }
         }
 

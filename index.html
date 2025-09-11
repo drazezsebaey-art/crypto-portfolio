@@ -368,7 +368,8 @@
             document.getElementById('coinSymbol').value = '';
             document.getElementById('coinAmount').value = '';
             document.getElementById('coinPrice').value = '';
-            updateCoinPrice(symbol);
+            // تحديث الأسعار بعد إضافة عملة جديدة
+            updatePrices();
         }
 
         function removeCoin(symbol) {
@@ -486,15 +487,15 @@
             document.getElementById('initialInvestmentInput').value = '';
         }
 
-        function getCoinGeckoId(symbol) {
-            const symbolMap = {
+        function getCoinId(symbol) {
+            const coinMap = {
                 'bitcoin': 'bitcoin',
                 'ethereum': 'ethereum',
                 'usdt': 'tether',
                 'sol': 'solana',
                 'sui': 'sui',
                 'avax': 'avalanche-2',
-                'sei': 'sei',
+                'sei': 'sei-network',
                 'render': 'render-token',
                 'icp': 'internet-computer',
                 'fet': 'fetch-ai',
@@ -503,7 +504,7 @@
                 'ada': 'cardano',
                 'doge': 'dogecoin',
                 'dot': 'polkadot',
-                'matic': 'polygon',
+                'matic': 'matic-network',
                 'shib': 'shiba-inu',
                 'ltc': 'litecoin',
                 'uni': 'uniswap',
@@ -519,7 +520,7 @@
                 'xmr': 'monero',
                 'ape': 'apecoin',
                 'near': 'near',
-                'hbar': 'hedera',
+                'hbar': 'hedera-hashgraph',
                 'flow': 'flow',
                 'mana': 'decentraland',
                 'sand': 'the-sandbox',
@@ -533,25 +534,23 @@
                 'arb': 'arbitrum',
                 'op': 'optimism'
             };
-            return symbolMap[symbol] || symbol; // إرجاع الرمز كما هو إذا لم يكن موجودًا
+            return coinMap[symbol] || symbol.toLowerCase();
         }
 
         async function updateCoinPrice(symbol) {
             if (!currentPortfolio) return;
-            const coinGeckoId = getCoinGeckoId(symbol);
             try {
-                const proxyUrl = 'https://corsproxy.io/?'; // استخدام بروكسي لتجاوز CORS
-                const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoId}&vs_currencies=usd`)}`);
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const coinId = getCoinId(symbol);
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`);
                 const data = await response.json();
-                if (data[coinGeckoId] && data[coinGeckoId].usd) {
-                    portfolios[currentPortfolio].coins[symbol].currentPrice = parseFloat(data[coinGeckoId].usd);
+                if (data[coinId] && data[coinId].usd) {
+                    portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
+                    savePortfolios();
+                    displayCoins();
                 } else {
                     console.error(`خطأ في جلب سعر ${symbol}:`, data);
                     portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
                 }
-                savePortfolios();
-                displayCoins();
             } catch (error) {
                 console.error(`خطأ في تحديث سعر ${symbol}:`, error);
                 portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
@@ -567,28 +566,26 @@
                 return;
             }
             document.getElementById('lastUpdate').innerHTML = '<div class="loading-spinner"></div>جاري التحديث...';
-            let retries = 2;
-            while (retries >= 0) {
-                try {
-                    // تحديث الأسعار واحدة تلو الأخرى لتجنب تجاوز الحدود
-                    for (const symbol of symbols) {
-                        await updateCoinPrice(symbol);
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // تأخير 1 ثانية بين الطلبات
-                    }
-                    savePortfolios();
-                    displayCoins();
-                    const now = new Date();
-                    document.getElementById('lastUpdate').textContent = `آخر تحديث: ${now.toLocaleTimeString('ar-SA')}`;
-                    return;
-                } catch (error) {
-                    console.error('خطأ في تحديث الأسعار:', error);
-                    retries--;
-                    if (retries >= 0) {
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+            try {
+                const coinIds = symbols.map(symbol => getCoinId(symbol)).join(',');
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`);
+                const data = await response.json();
+                symbols.forEach(symbol => {
+                    const coinId = getCoinId(symbol);
+                    if (data[coinId] && data[coinId].usd) {
+                        portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
                     } else {
-                        document.getElementById('lastUpdate').textContent = `خطأ في تحديث الأسعار (محاولات منتهية): ${error.message}`;
+                        console.error(`خطأ في جلب سعر ${symbol}:`, data);
+                        portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
                     }
-                }
+                });
+                savePortfolios();
+                displayCoins();
+                const now = new Date();
+                document.getElementById('lastUpdate').textContent = `آخر تحديث: ${now.toLocaleTimeString('ar-SA')}`;
+            } catch (error) {
+                console.error('خطأ في تحديث الأسعار:', error);
+                document.getElementById('lastUpdate').textContent = 'خطأ في تحديث الأسعار';
             }
         }
 
@@ -652,7 +649,7 @@
             if (currentPortfolio && Object.keys(portfolios[currentPortfolio].coins).length > 0) {
                 updatePrices();
             }
-        }, 60000); // زيادة الفترة إلى 60 ثانية لتجنب تجاوز الحدود
+        }, 30000);
 
         setTimeout(() => {
             if (currentPortfolio) {

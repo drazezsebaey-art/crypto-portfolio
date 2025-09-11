@@ -513,10 +513,10 @@
                 const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`)}`);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
-                if (data[coinId] && typeof data[coinId].usd === 'number') {
+                if (data[coinId] && data[coinId].hasOwnProperty('usd') && typeof data[coinId].usd === 'number') {
                     portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
                 } else {
-                    console.error(`خطأ في جلب سعر ${symbol}:`, data);
+                    console.error(`خطأ في جلب سعر ${symbol}: البيانات غير صالحة`, data);
                     portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
                 }
                 savePortfolios();
@@ -542,8 +542,8 @@
                 const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`)}`);
                 if (!response.ok) {
                     if (response.status === 429) {
-                        console.warn('تم الوصول إلى حد الطلبات (429). جاري المحاولة مرة أخرى بعد 30 ثانية...');
-                        await new Promise(resolve => setTimeout(resolve, 30000)); // تأخير 30 ثانية
+                        console.warn('تم الوصول إلى حد الطلبات (429). جاري المحاولة مرة أخرى بعد 60 ثانية...');
+                        await new Promise(resolve => setTimeout(resolve, 60000)); // تأخير 60 ثانية
                         return updatePrices(); // إعادة المحاولة
                     }
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -551,10 +551,10 @@
                 const data = await response.json();
                 symbols.forEach(symbol => {
                     const coinId = getCoinId(symbol);
-                    if (data[coinId] && typeof data[coinId].usd === 'number') {
+                    if (data[coinId] && data[coinId].hasOwnProperty('usd') && typeof data[coinId].usd === 'number') {
                         portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
                     } else {
-                        console.error(`خطأ في جلب سعر ${symbol}:`, data);
+                        console.error(`خطأ في جلب سعر ${symbol}: البيانات غير صالحة`, data);
                         portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
                     }
                 });

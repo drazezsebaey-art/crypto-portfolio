@@ -513,6 +513,7 @@
                 const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`)}`);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
+                console.log(`استجابة لـ ${symbol} (${coinId}):`, data); // سجل الاستجابة للتحقق
                 if (data[coinId] && data[coinId].hasOwnProperty('usd') && typeof data[coinId].usd === 'number') {
                     portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
                 } else {
@@ -549,12 +550,13 @@
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log('استجابة كاملة لجميع العملات:', data); // سجل الاستجابة الكاملة
                 symbols.forEach(symbol => {
                     const coinId = getCoinId(symbol);
                     if (data[coinId] && data[coinId].hasOwnProperty('usd') && typeof data[coinId].usd === 'number') {
                         portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
                     } else {
-                        console.error(`خطأ في جلب سعر ${symbol}: البيانات غير صالحة`, data);
+                        console.error(`خطأ في جلب سعر ${symbol} (${coinId}): البيانات غير صالحة`, data);
                         portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
                     }
                 });

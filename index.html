@@ -542,8 +542,8 @@
                 const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`)}`);
                 if (!response.ok) {
                     if (response.status === 429) {
-                        console.warn('تم الوصول إلى حد الطلبات (429). جاري المحاولة مرة أخرى بعد 10 ثوانٍ...');
-                        await new Promise(resolve => setTimeout(resolve, 10000)); // إعادة محاولة بعد 10 ثوانٍ
+                        console.warn('تم الوصول إلى حد الطلبات (429). جاري المحاولة مرة أخرى بعد 30 ثانية...');
+                        await new Promise(resolve => setTimeout(resolve, 30000)); // تأخير 30 ثانية
                         return updatePrices(); // إعادة المحاولة
                     }
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -624,12 +624,12 @@
             document.getElementById('aggregatedProfit').className = `text-3xl font-bold ${profitClass}`;
         }
 
-        // زيادة فترة التحديث إلى 2 دقيقة
-        setInterval(() => {
-            if (currentPortfolio && Object.keys(portfolios[currentPortfolio].coins).length > 0) {
-                updatePrices();
-            }
-        }, 120000); // 2 دقيقة
+        // تعطيل التحديث التلقائي، المستخدم يضغط يدويًا على "تحديث الأسعار"
+        // setInterval(() => {
+        //     if (currentPortfolio && Object.keys(portfolios[currentPortfolio].coins).length > 0) {
+        //         updatePrices();
+        //     }
+        // }, 300000); // 5 دقائق (معلق الآن)
 
         setTimeout(() => {
             if (currentPortfolio) {

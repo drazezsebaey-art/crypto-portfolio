@@ -4,61 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>متتبع محفظة العملات الرقمية</title>
-    <script src="https://cdn.tailwindcss.com"></script> <!-- للاختبار فقط، استبدله في الإنتاج -->
+    <!-- للاختبار فقط: يُفضل تثبيت Tailwind محليًا في الإنتاج باستخدام PostCSS أو Tailwind CLI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- منع طلبات 404 لـ favicon -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <style>
         body { font-family: 'Arial', sans-serif; }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .card-glow {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        .card-glow:hover {
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-glow { box-shadow: 0 4px 20px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+        .card-glow:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.15); transform: translateY(-2px); }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .price-up { color: #10b981; }
         .price-down { color: #ef4444; }
         .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
+            border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%;
+            width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; margin-right: 10px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 300px;
-            text-align: right;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: white; padding: 20px; border-radius: 8px; width: 300px; text-align: right; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -368,8 +333,7 @@
             document.getElementById('coinSymbol').value = '';
             document.getElementById('coinAmount').value = '';
             document.getElementById('coinPrice').value = '';
-            // تحديث الأسعار بعد إضافة عملة جديدة
-            updatePrices();
+            updatePrices(); // تحديث الأسعار بعد إضافة عملة
         }
 
         function removeCoin(symbol) {
@@ -534,23 +498,29 @@
                 'arb': 'arbitrum',
                 'op': 'optimism'
             };
-            return coinMap[symbol] || symbol.toLowerCase();
+            const mappedId = coinMap[symbol.toLowerCase()];
+            if (!mappedId) {
+                console.warn(`معرف غير مدعوم للرمز ${symbol}, يتم استخدام الرمز كما هو`);
+            }
+            return mappedId || symbol.toLowerCase();
         }
 
         async function updateCoinPrice(symbol) {
             if (!currentPortfolio) return;
             try {
                 const coinId = getCoinId(symbol);
-                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`);
+                const proxyUrl = 'https://corsproxy.io/?';
+                const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_24hr_change=true`)}`);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
-                if (data[coinId] && data[coinId].usd) {
+                if (data[coinId] && typeof data[coinId].usd === 'number') {
                     portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
-                    savePortfolios();
-                    displayCoins();
                 } else {
                     console.error(`خطأ في جلب سعر ${symbol}:`, data);
                     portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
                 }
+                savePortfolios();
+                displayCoins();
             } catch (error) {
                 console.error(`خطأ في تحديث سعر ${symbol}:`, error);
                 portfolios[currentPortfolio].coins[symbol].currentPrice = 0;
@@ -568,11 +538,13 @@
             document.getElementById('lastUpdate').innerHTML = '<div class="loading-spinner"></div>جاري التحديث...';
             try {
                 const coinIds = symbols.map(symbol => getCoinId(symbol)).join(',');
-                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`);
+                const proxyUrl = 'https://corsproxy.io/?';
+                const response = await fetch(`${proxyUrl}${encodeURIComponent(`https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`)}`);
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await response.json();
                 symbols.forEach(symbol => {
                     const coinId = getCoinId(symbol);
-                    if (data[coinId] && data[coinId].usd) {
+                    if (data[coinId] && typeof data[coinId].usd === 'number') {
                         portfolios[currentPortfolio].coins[symbol].currentPrice = data[coinId].usd;
                     } else {
                         console.error(`خطأ في جلب سعر ${symbol}:`, data);
